@@ -3,36 +3,6 @@ namespace HelloWorld
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
-    using System.Threading;
-    using System.Threading.Tasks;
-
-    public class GamingServiceContainer
-    {
-        private readonly Dictionary<Type, Object> gamingServiceByInterfaceType;
-    
-        public GamingServiceContainer()
-        {
-            this.gamingServiceByInterfaceType = new Dictionary<Type, Object>();
-        }
-
-        public GamingServiceContainer Register<TInterface>(TInterface instance)
-        {
-            this.gamingServiceByInterfaceType.Add(typeof(TInterface), instance);
-
-            return this;
-        }
-
-        public T Get<T>()
-        {
-            return (T)Get(typeof(T));
-        }
-    
-        public object Get(Type parameterType)
-        {
-            return this.gamingServiceByInterfaceType[parameterType];
-        }
-    }
 
     public class GamerFactory
     {
@@ -70,15 +40,14 @@ namespace HelloWorld
         {
             return new Dictionary<Type, Type>
             {
-                { typeof(CallOfDutyGame) , typeof(NerdyGamer)},
-                { typeof(MarioKartGame) ,typeof(SpottyGamer) }
+                { typeof(CallOfDutyGame) , typeof(CodGamer)},
+                { typeof(MarioKartGame) ,typeof(MkGamer) }
             };
         }
     }
 
     public interface IGamerFactory
     {
-
     }
 
     public class GamerFactory2
@@ -90,14 +59,14 @@ namespace HelloWorld
         ISweatyPalmsService palms;
         IChineseTakeawayService takeaway;
         IUnderpantsService pants;
-        IAcneService acne;
+        IGamingHeadsetService acne;
 
         public GamerFactory2(
             IPopcornService popcorn,
             ISweatyPalmsService palms,
             IChineseTakeawayService takeaway,
             IUnderpantsService pants,
-            IAcneService acne)
+            IGamingHeadsetService acne)
         {
             this.popcorn = popcorn;
             this.palms = palms;
@@ -108,13 +77,13 @@ namespace HelloWorld
 
         public IGamer CreateGamer(MarioKartGame game)
         {
-            return new SpottyGamer(
+            return new MkGamer(
                 this.popcorn, this.palms, this.pants, this.acne, this.takeaway);
         }
 
         public IGamer CreateGamer(CallOfDutyGame game)
         {
-            return new NerdyGamer(
+            return new CodGamer(
                 this.popcorn, this.palms, this.pants, this.acne, this.takeaway);
         }
     }
@@ -128,14 +97,14 @@ namespace HelloWorld
         ISweatyPalmsService palms;
         IChineseTakeawayService takeaway;
         IUnderpantsService pants;
-        IAcneService acne;
+        IGamingHeadsetService acne;
 
         public GamerFactory3(
             IPopcornService popcorn,
             ISweatyPalmsService palms,
             IChineseTakeawayService takeaway,
             IUnderpantsService pants,
-            IAcneService acne)
+            IGamingHeadsetService acne)
         {
             this.popcorn = popcorn;
             this.palms = palms;
@@ -156,113 +125,17 @@ namespace HelloWorld
 
         public IGamer InternalCreateGamer(MarioKartGame game)
         {
-            return new SpottyGamer(
+            return new MkGamer(
                 this.popcorn, this.palms, this.pants, this.acne, this.takeaway);
         }
 
         public IGamer InternalCreateGamer(CallOfDutyGame game)
         {
-            return new NerdyGamer(
+            return new CodGamer(
                 this.popcorn, this.palms, this.pants, this.acne, this.takeaway);
         }
     }
 
-    public interface IGame
-    {
-    }
-
-    public class CallOfDutyGame : IGame
-    {
-    }
-
-    public class MarioKartGame : IGame
-    {
-    }
-
-    public interface IGamer
-    {
-        GameReport PlayGame();
-    }
-
-    public abstract class Gamer : IGamer
-    {
-        public void Guard<T>(T blah)
-        {
-            if (blah == null)
-            {
-                throw new NullReferenceException();
-            }
-        }
-
-        public static bool isPrime(int number)
-        {
-            double boundary = Math.Floor(Math.Sqrt(number));
-
-            if (number == 1) return false;
-            if (number == 2) return true;
-
-            for (int i = 2; i <= boundary; ++i)
-            {
-                if (number % i == 0) return false;
-            }
-
-            return true;
-        }
-
-        public abstract GameReport PlayGame();
-    }
-
-    public class SpottyGamer : Gamer
-    {
-        public SpottyGamer(
-            IPopcornService s1,
-            ISweatyPalmsService s2,
-            IUnderpantsService s3,
-            IAcneService s4,
-            IChineseTakeawayService s5)
-        {
-            this.Guard(s1);
-            this.Guard(s2);
-            this.Guard(s3);
-            this.Guard(s4);
-            this.Guard(s5);
-        }
-
-        public override GameReport PlayGame()
-        {
-            isPrime(321);
-            return new GameReport();
-        }
-    }
-
-    public class NerdyGamer : Gamer
-    {
-        public NerdyGamer(
-            IPopcornService s1,
-            ISweatyPalmsService s2,
-            IUnderpantsService s3,
-            IAcneService s4,
-            IChineseTakeawayService s5)
-        {
-            this.Guard(s1);
-            this.Guard(s2);
-            this.Guard(s3);
-            this.Guard(s4);
-            this.Guard(s5);
-        }
-
-        
-
-        public override GameReport PlayGame()
-        {
-            isPrime(321);
-            return new GameReport();
-        }
-    }
-
-    public class GameReport
-    {
-    }
 
     public interface IPopcornService
     {
@@ -280,7 +153,7 @@ namespace HelloWorld
     {
     }
 
-    public interface IAcneService
+    public interface IGamingHeadsetService
     {
     }
 
@@ -300,7 +173,7 @@ namespace HelloWorld
     {
     }
 
-    public class AcneService : IAcneService
+    public class GamingHeadsetService : IGamingHeadsetService
     {
     }
 }

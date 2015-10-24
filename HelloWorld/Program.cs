@@ -1,6 +1,7 @@
 ﻿namespace HelloWorld
 {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Threading;
 
@@ -8,125 +9,132 @@
     {
         static void Main(string[] args)
         {
-            const int Loop = 100000;
+            const int Loop = 500000;
 
             IPopcornService popcorn = new PopcornService();
             ISweatyPalmsService palms = new SweatyPalmsService();
             IChineseTakeawayService takeaway = new ChineseTakeawayService();
             IUnderpantsService pants = new UnderpantsService();
-            IAcneService acne = new AcneService();
+            IGamingHeadsetService acne = new GamingHeadsetService();
 
-            var container = new GamingServiceContainer();
-            
-            container.Register(popcorn)
-                     .Register(palms)
-                     .Register(takeaway)
-                     .Register(pants)
-                     .Register(acne);
+            var container = new GamingServiceContainer()
+                .Register(popcorn)
+                .Register(palms)
+                .Register(takeaway)
+                .Register(pants)
+                .Register(acne);
 
-            var gamerFactory = new GamerFactory(container);
+            var gamerFactory1 = new GamerFactory(container);
             var gamerFactory2 = new GamerFactory2(popcorn, palms, takeaway, pants, acne);
             var gamerFactory3 = new GamerFactory3(popcorn, palms, takeaway, pants, acne);
 
             var callOfDutyGame = new CallOfDutyGame();
             var marioKartGame = new MarioKartGame();
 
-            // Make sure they have both been JITed
+            // Make sure they have all been JITed
             for (int i = 0; i < 100; i++)
             {
-                TestActivator(gamerFactory, callOfDutyGame, marioKartGame);
-                TestNoReflection(gamerFactory2, callOfDutyGame, marioKartGame);
-                TestDynamic(gamerFactory3, callOfDutyGame, marioKartGame);
+                TestActivator(gamerFactory1, callOfDutyGame, marioKartGame, 100);
+                TestNoReflection(gamerFactory2, callOfDutyGame, marioKartGame, 100);
+                TestDynamic(gamerFactory3, callOfDutyGame, marioKartGame, 100);
             }
 
-            Stopwatch stopwatch = new Stopwatch();
+            Console.WriteLine(string.Join("\t",
+                    new[]
+                {
+                    "Cycles",
+                    "Reflec",
+                    "Normal",
+                    "Dynamic",
+                    "Reflec",
+                    "Normal",
+                    "Dynamic"
+                }));
 
-            Thread.Sleep(100);
-            stopwatch.Start();
-            for (int i = 0; i < Loop; i++)
+            for (int cycles = 1; cycles < 5000; cycles = cycles * 2)
             {
-                TestActivator(gamerFactory, callOfDutyGame, marioKartGame);
-            }
-            stopwatch.Stop();
-            Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
+                Stopwatch stopwatch = new Stopwatch();
 
-            Thread.Sleep(100);
-            stopwatch.Restart();
-            for (int i = 0; i < Loop; i++)
-            {
-                TestNoReflection(gamerFactory2, callOfDutyGame, marioKartGame);
-            }
-            stopwatch.Stop();
-            Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
+                Thread.Sleep(50);
+                stopwatch.Start();
+                for (int i = 0; i < Loop; i++)
+                {
+                    TestActivator(gamerFactory1, callOfDutyGame, marioKartGame, cycles);
+                }
+                stopwatch.Stop();
+                var activatorTime = stopwatch.Elapsed;
 
-            Thread.Sleep(100);
-            stopwatch.Restart();
-            for (int i = 0; i < Loop; i++)
-            {
-                TestDynamic(gamerFactory3, callOfDutyGame, marioKartGame);
+                Thread.Sleep(50);
+                stopwatch.Restart();
+                for (int i = 0; i < Loop; i++)
+                {
+                    TestNoReflection(gamerFactory2, callOfDutyGame, marioKartGame, cycles);
+                }
+                stopwatch.Stop();
+                var traditionalTime = stopwatch.Elapsed;
+
+                Thread.Sleep(50);
+                stopwatch.Restart();
+                for (int i = 0; i < Loop; i++)
+                {
+                    TestDynamic(gamerFactory3, callOfDutyGame, marioKartGame, cycles);
+                }
+                stopwatch.Stop();
+                var dynamicTime = stopwatch.Elapsed;
+
+                
+
+
+                Console.WriteLine(string.Join("\t",
+                    new[]
+                {
+                    cycles.ToString(),
+                    activatorTime.ToString("ss':'fff"),
+                    traditionalTime.ToString("ss':'fff"),
+                    dynamicTime.ToString("ss':'fff"),
+                    (activatorTime.TotalMilliseconds / traditionalTime.TotalMilliseconds).ToString("#.##"),
+                    (traditionalTime.TotalMilliseconds / traditionalTime.TotalMilliseconds).ToString("#.##"),
+                    (dynamicTime.TotalMilliseconds / traditionalTime.TotalMilliseconds).ToString("#.##")
+                }));
+                
             }
-            stopwatch.Stop();
-            Console.WriteLine("Time elapsed: {0}", stopwatch.Elapsed);
+
             
-            
+
             Console.ReadKey();
         }
 
-        public static void TestActivator(GamerFactory gamerFactory, IGame callOfDutyGame, IGame marioKartGame)
+        public static void TestActivator(
+            GamerFactory gamerFactory, IGame callOfDutyGame, IGame marioKartGame, int cycles)
         {
             IGamer gamer1 = gamerFactory.CreateGamer(callOfDutyGame);
-            var gameReport1 = gamer1.PlayGame();
+            var gameReport1 = gamer1.PlayGame(cycles);
 
             IGamer gamer2 = gamerFactory.CreateGamer(marioKartGame);
-            var gameReport2 = gamer2.PlayGame();
+            var gameReport2 = gamer2.PlayGame(cycles);
         }
 
-        public static void TestNoReflection(GamerFactory2 gamerFactory, CallOfDutyGame callOfDutyGame, MarioKartGame marioKartGame)
+        public static void TestNoReflection(
+            GamerFactory2 gamerFactory, CallOfDutyGame callOfDutyGame, MarioKartGame marioKartGame, int cycles)
         {
             IGamer gamer1 = gamerFactory.CreateGamer(callOfDutyGame);
-            var gameReport1 = gamer1.PlayGame();
+            var gameReport1 = gamer1.PlayGame(cycles);
 
-            IGamer gamer2 = gamerFactory.CreateGamer(marioKartGame);
-            var gameReport2 = gamer2.PlayGame();
+            gamer1 = gamerFactory.CreateGamer(marioKartGame);
+            var gameReport2 = gamer1.PlayGame(cycles);
         }
 
-        public static void TestDynamic(GamerFactory3 gamerFactory, IGame callOfDutyGame, IGame marioKartGame)
+        public static void TestDynamic(
+            GamerFactory3 gamerFactory, IGame callOfDutyGame, IGame marioKartGame, int cycles)
         {
             IGamer gamer1 = gamerFactory.CreateGamer(callOfDutyGame);
-            var gameReport1 = gamer1.PlayGame();
+            var gameReport1 = gamer1.PlayGame(cycles);
 
-            IGamer gamer2 = gamerFactory.CreateGamer(marioKartGame);
-            var gameReport2 = gamer2.PlayGame();
-        }
-
-        public static bool isPrime(int number)
-        {
-            double boundary = Math.Floor(Math.Sqrt(number));
-
-            if (number == 1) return false;
-            if (number == 2) return true;
-
-            for (int i = 2; i <= boundary; ++i)
-            {
-                if (number % i == 0) return false;
-            }
-
-            return true;
+            gamer1 = gamerFactory.CreateGamer(marioKartGame);
+            var gameReport2 = gamer1.PlayGame(cycles);
         }
     }
 
-
-    public interface IWriter
-    {
-        void Write(string message);
-    }
-    public class Writer : IWriter
-    {
-        public void Write(string message)
-        {
-            Console.WriteLine(message);
-        }
-    }
 
     public class Exclaimer
     {
