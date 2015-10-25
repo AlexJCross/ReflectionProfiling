@@ -25,6 +25,7 @@
                 .Register(headset);
 
             var gamerFactoryR = new GamerFactoryReflection(container);
+            var gamerFactoryL = new GamerFactoryCompiledLambda(container);
             var gamerFactoryN = new GamerFactoryNormal(popcorn, palms, takeaway, pants, headset);
             var gamerFactoryD = new GamerFactoryDynamic(popcorn, palms, takeaway, pants, headset);
             var gamerFactoryT = new GamerFactoryTypeSwitch(popcorn, palms, takeaway, pants, headset);
@@ -35,7 +36,8 @@
             // Make sure they have all been JITed
             for (int i = 0; i < 100; i++)
             {
-                TestActivator(gamerFactoryR, callOfDutyGame, marioKartGame, 100);
+                TestReflection(gamerFactoryR, callOfDutyGame, marioKartGame, 100);
+                TestCompiledLambda(gamerFactoryL, callOfDutyGame, marioKartGame, 100);
                 TestNormal(gamerFactoryN, callOfDutyGame, marioKartGame, 100);
                 TestDynamic(gamerFactoryD, callOfDutyGame, marioKartGame, 100);
                 TestTypeSwitch(gamerFactoryT, callOfDutyGame, marioKartGame, 100);
@@ -48,10 +50,12 @@
                     "Normal",
                     "Type",
                     "Dynamic",
+                    "CLambda",
                     "Reflec",
                     "Normal",
                     "Type",
                     "Dynamic",
+                    "CLambda",
                     "Reflec",
                 }));
 
@@ -68,6 +72,7 @@
                 }
                 stopwatch.Stop();
                 var traditionalTime = stopwatch.Elapsed;
+                GC.Collect();
 
                 // Using the dynamic keyword
                 Thread.Sleep(50);
@@ -78,6 +83,18 @@
                 }
                 stopwatch.Stop();
                 var dynamicTime = stopwatch.Elapsed;
+                GC.Collect();
+
+                // Using a compiled lambda
+                Thread.Sleep(50);
+                stopwatch.Restart();
+                for (int i = 0; i < Loop; i++)
+                {
+                    TestCompiledLambda(gamerFactoryL, callOfDutyGame, marioKartGame, cycles);
+                }
+                stopwatch.Stop();
+                var compiledLambdaTime = stopwatch.Elapsed;
+                GC.Collect();
 
                 // Using a dictionary cached on type
                 Thread.Sleep(50);
@@ -88,16 +105,18 @@
                 }
                 stopwatch.Stop();
                 var typeSwitchTime = stopwatch.Elapsed;
+                GC.Collect();
 
                 // Using reflection
                 Thread.Sleep(50);
                 stopwatch.Start();
                 for (int i = 0; i < Loop; i++)
                 {
-                    TestActivator(gamerFactoryR, callOfDutyGame, marioKartGame, cycles);
+                    TestReflection(gamerFactoryR, callOfDutyGame, marioKartGame, cycles);
                 }
                 stopwatch.Stop();
                 var activatorTime = stopwatch.Elapsed;
+                GC.Collect();
 
                 Console.WriteLine(string.Join("\t",
                     new[]
@@ -106,10 +125,12 @@
                     traditionalTime.ToString("ss':'fff"),
                     typeSwitchTime.ToString("ss':'fff"),
                     dynamicTime.ToString("ss':'fff"),
+                    compiledLambdaTime.ToString("ss':'fff"),
                     activatorTime.ToString("ss':'fff"),
                     (traditionalTime.TotalMilliseconds / traditionalTime.TotalMilliseconds).ToString("#.##"),
                     (typeSwitchTime.TotalMilliseconds / traditionalTime.TotalMilliseconds).ToString("#.##"),
                     (dynamicTime.TotalMilliseconds / traditionalTime.TotalMilliseconds).ToString("#.##"),
+                    (compiledLambdaTime.TotalMilliseconds / traditionalTime.TotalMilliseconds).ToString("#.##"),
                     (activatorTime.TotalMilliseconds / traditionalTime.TotalMilliseconds).ToString("#.##")
                 }));
             }
@@ -118,8 +139,18 @@
             Console.ReadKey();
         }
 
-        public static void TestActivator(
+        public static void TestReflection(
             GamerFactoryReflection gamerFactory, IGame callOfDutyGame, IGame marioKartGame, int cycles)
+        {
+            IGamer gamer1 = gamerFactory.CreateGamer(callOfDutyGame);
+            var gameReport1 = gamer1.PlayGame(cycles);
+
+            IGamer gamer2 = gamerFactory.CreateGamer(marioKartGame);
+            var gameReport2 = gamer2.PlayGame(cycles);
+        }
+
+        public static void TestCompiledLambda(
+            GamerFactoryCompiledLambda gamerFactory, IGame callOfDutyGame, IGame marioKartGame, int cycles)
         {
             IGamer gamer1 = gamerFactory.CreateGamer(callOfDutyGame);
             var gameReport1 = gamer1.PlayGame(cycles);

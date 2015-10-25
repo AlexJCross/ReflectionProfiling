@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Gamer.cs" />
     <Compile Include="GameReport.cs" />
+    <Compile Include="GamerFactoryCompiledLambda.cs" />
     <Compile Include="GamerFactoryDynamic.cs" />
     <Compile Include="GamerFactoryNormal.cs" />
     <Compile Include="GamerFactoryReflection.cs" />
