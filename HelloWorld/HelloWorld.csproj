@@ -43,6 +43,10 @@
   <ItemGroup>
     <Compile Include="Gamer.cs" />
     <Compile Include="GameReport.cs" />
+    <Compile Include="GamerFactoryDynamic.cs" />
+    <Compile Include="GamerFactoryNormal.cs" />
+    <Compile Include="GamerFactoryReflection.cs" />
+    <Compile Include="GamerFactoryTypeSwitch.cs" />
     <Compile Include="GamingServiceContainer.cs" />
     <Compile Include="Games.cs" />
     <Compile Include="IocContainer.cs" />
